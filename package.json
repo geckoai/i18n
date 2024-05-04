@@ -1,6 +1,6 @@
 {
-  "name": "@quick-toolkit/i18n",
-  "version": "1.0.3",
+  "name": "@geckoai/i18n",
+  "version": "1.0.0",
   "description": "The i18n module is used to support internationalization.",
   "main": "dist/cjs",
   "types": "dist/types",
@@ -15,18 +15,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/quick-toolkit/i18n.git"
+    "url": "git+https://github.com/geckoai/i18n.git"
   },
   "keywords": [
-    "@quick-toolkit",
-    "@quick-toolkit/i18n"
+    "geckoai",
+    "i18n",
+    "@geckoai",
+    "geckoai i18n",
+    "geckoai/i18n",
+    "@geckoai/i18n"
   ],
   "author": "RanYunLong<549510622@qq.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/quick-toolkit/i18n/issues"
+    "url": "https://github.com/geckoai/i18n/issues"
   },
-  "homepage": "https://github.com/quick-toolkit/i18n#readme",
+  "homepage": "https://github.com/geckoai/i18n#readme",
   "devDependencies": {
     "@babel/core": "^7.16.0",
     "@babel/preset-env": "^7.16.4",

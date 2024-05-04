@@ -1,14 +1,14 @@
 # i18n
-The @quick-toolkit/i18n module is used to support internationalization.
+The @geckoai/i18n module is used to support internationalization.
 
-[![npm (scoped)](https://img.shields.io/npm/v/@quick-toolkit/i18n)](https://www.npmjs.com/package/@quick-toolkit/i18n)
+[![npm (scoped)](https://img.shields.io/npm/v/@geckoai/i18n)](https://www.npmjs.com/package/@geckoai/i18n)
 
 ## Installing
 
 ```shell
-npm i @quick-toolkit/i18n
+npm i @geckoai/i18n
 #or
-yarn add @quick-toolkit/i18n
+yarn add @geckoai/i18n
 ```
 
 ## Example Usage
@@ -70,13 +70,13 @@ describe('index.spec.ts', () => {
 ```
 
 ## Documentation
-- [ApiDocs](https://quick-toolkit.github.io/i18n/)
-- [samples](https://github.com/quick-toolkit/i18n/tree/master/sample)
+- [ApiDocs](https://geckoai.github.io/i18n/)
+- [samples](https://github.com/geckoai/i18n/tree/master/sample)
 
 
 ## Issues
-Create [issues](https://github.com/quick-toolkit/i18n/issues) in this repository for anything related to the Class Decorator. When creating issues please search for existing issues to avoid duplicates.
+Create [issues](https://github.com/geckoai/i18n/issues) in this repository for anything related to the Class Decorator. When creating issues please search for existing issues to avoid duplicates.
 
 
 ## License
-Licensed under the [MIT](https://github.com/quick-toolkit/i18n/blob/master/LICENSE) License.
+Licensed under the [MIT](https://github.com/geckoai/i18n/blob/master/LICENSE) License.
