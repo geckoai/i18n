@@ -23,103 +23,181 @@
 import merge from 'lodash.merge';
 import { Exception } from './exception';
 
-export type DepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DepPartial<T[P]> : T[P];
-};
+const LOCALES = Symbol.for('locales');
+const DEFAULT = Symbol.for('default');
+const CURRENT = Symbol.for('current');
+const PROXY = Symbol.for('proxy');
 
 /**
  * @class I18n<object>
  */
 export class I18n<T extends object> {
-  private _locales = new Map<string, DepPartial<T>>();
-
-  private current: string;
-
-  private default: string;
-
   /**
-   * 构造函数
-   * @param defaultLocale 默认语言配置
+   * 判断是否为对象
+   * @param v
+   * @private
    */
-  public constructor(private defaultLocale: BaseLocale & T) {
-    if (!defaultLocale.code) {
-      throw new Exception('locale code cannot be empty!');
-    }
-    this.default = defaultLocale.code;
-    this.current = defaultLocale.code;
-    this.defined(defaultLocale);
+  private static __isObject(v: any): boolean {
+    return typeof v === 'object' && v.constructor === Object;
   }
 
   /**
-   * 定义语言
+   * 获取语言包
+   * @param proxy
+   * @private
+   */
+  public static locales<T>(proxy: DepLocale<T>): Record<string, T> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    return (proxy as any)[PROXY]() as Record<string, T>;
+  }
+
+  /**
+   * 获取当前语言的内容
+   * @param proxy
+   */
+  public static current<T>(proxy: DepLocale<T>): T {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    return (proxy as any)[CURRENT]() as T;
+  }
+
+  /**
+   * 获取默认语言包的内容
+   * @param proxy
+   */
+  public static default<T>(proxy: DepLocale<T>): T {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    return (proxy as any)[DEFAULT]() as T;
+  }
+
+  /**
+   * Create proxy  method
+   * @private
+   */
+  private static [PROXY]<T extends object>(
+    i18n: I18n<any>,
+    locales: Map<string, T>
+  ): DepLocale<T> {
+    const data: Record<string, any> = {};
+    const def = locales.get(i18n.default());
+    locales.forEach((v, k) => {
+      data[k] = v ?? def;
+    });
+    return new Proxy<DepLocale<T>>(data as any, {
+      /**
+       * get property
+       * @param target
+       * @param property
+       * @param receiver
+       */
+      get: (target: Record<string, any>, property, receiver): any => {
+        if (property === PROXY) {
+          return (): any => {
+            const values: Record<string, any> = {};
+            locales.forEach((v, k) => {
+              if (
+                (I18n.__isObject(def) || I18n.__isObject(v)) &&
+                k !== i18n.default()
+              ) {
+                values[k] = merge({}, def, v);
+              } else {
+                values[k] = v ?? def;
+              }
+            });
+            return values;
+          };
+        } else if (property === DEFAULT) {
+          return (): any => target[i18n.default()];
+        } else if (property === CURRENT) {
+          if (I18n.__isObject(def) || I18n.__isObject(target[i18n.locale()])) {
+            return (): any =>
+              merge({}, target[i18n.default()], target[i18n.locale()]);
+          }
+          return (): any => target[i18n.locale()] ?? target[i18n.default()];
+        }
+        const childMap = new Map();
+        locales.forEach((v: any, k) => {
+          childMap.set(k, v?.[property]);
+        });
+        return I18n[PROXY](i18n, childMap);
+      },
+    });
+  }
+
+  private [LOCALES]: Map<string, LocaleType<T>> = new Map();
+
+  private [DEFAULT]: string;
+
+  private [CURRENT]: string;
+
+  /**
+   * constructor
+   * @param defaultLocale
+   */
+  public constructor(defaultLocale: LocaleType<T>) {
+    if (!defaultLocale.code) {
+      throw new Exception('Code cannot be empty!');
+    }
+    this[DEFAULT] = defaultLocale.code;
+    this[CURRENT] = defaultLocale.code;
+    this[LOCALES].set(defaultLocale.code, defaultLocale);
+    this.localeData = this.localeData.bind(this);
+    this.locale = this.locale.bind(this);
+    this.locales = this.locales.bind(this);
+  }
+
+  /**
+   * 获取语言包
+   */
+  public localeData(): DepLocale<T>;
+  /**
+   * 获取指定语言的语言数据
+   * @param key
+   */
+  public localeData(key: string): LocaleType<T>;
+  /**
+   * 实现
+   * @param key
+   */
+  public localeData(key?: string): DepLocale<T> | LocaleType<T> {
+    if (key) {
+      return I18n.locales(I18n[PROXY](this, this[LOCALES]))?.[key];
+    }
+    return I18n[PROXY](this, this[LOCALES]);
+  }
+
+  /**
+   * 获取所有语言的 code[]
+   */
+  public locales(): string[] {
+    return Array.from(this[LOCALES].keys());
+  }
+
+  /**
+   * 设置/获取当前语言的 code
+   * @param code
+   */
+  public locale(code?: string): string {
+    if (code && this.locales().includes(code)) {
+      this[CURRENT] = code;
+      return code;
+    }
+    return this[CURRENT];
+  }
+
+  /**
+   * 获取默认语言的code
+   */
+  public default(): string {
+    return this[DEFAULT];
+  }
+
+  /**
+   * 更新语言包
    * @param locale
    */
-  public defined(locale: BaseLocale & DepPartial<T>): void {
-    this._locales.set(locale.code, merge({}, this.defaultLocale, locale));
-  }
-
-  /**
-   * 获取当前语言
-   */
-  public locale(): string;
-  /**
-   * 设置当前语言
-   * @param code
-   */
-  public locale(code: string): void;
-  /**
-   * 实现方法
-   * @param code
-   */
-  public locale(code?: string): string | void {
-    if (code) {
-      if (!this._locales.has(code)) {
-        throw new Exception(`Not defined locale ${code}!`);
-      }
-      this.current = code;
-    }
-
-    return this.current;
-  }
-
-  /**
-   * 获取当前语言配置
-   */
-  public localeData(code?: string): BaseLocale & T {
-    return (
-      (this._locales.get(code || this.current) as BaseLocale & T) ||
-      this.defaultLocale
-    );
-  }
-
-  /**
-   * 根据key获取locale Data
-   * @param callback
-   */
-  public getLocaleDataByKey<K extends string, V = any>(
-    callback: (data: BaseLocale & T) => V
-  ): Record<K, V> {
-    const record: Record<string, V> = {};
-    this.locales().forEach((locale) => {
-      record[locale.code] = callback(locale);
-    });
-    return record;
-  }
-
-  /**
-   * 已定义语言列表
-   */
-  public locales(): Array<BaseLocale & T> {
-    return Array.from(this._locales.keys()).map((code) =>
-      this.localeData(code)
-    );
-  }
-
-  /**
-   * 已定义语言code列表
-   */
-  public localeCodes(): string[] {
-    return Array.from(this._locales.keys());
+  public update(locale: LocaleType<DepPartial<T>>): void {
+    const oldValues = this[LOCALES].get(locale.code);
+    this[LOCALES].set(locale.code, merge({}, oldValues, locale));
   }
 }
 
@@ -134,6 +212,16 @@ export interface BaseLocale {
    */
   label: string;
 }
+
+export type LocaleType<T extends object> = BaseLocale & T;
+
+export type DepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DepPartial<T[P]> : T[P];
+};
+
+export type DepLocale<T> = {
+  [P in keyof T]: DepLocale<T[P]>;
+};
 
 export { Exception };
 
