@@ -14,15 +14,16 @@ describe('index.spec.ts', () => {
     },
   });
 
-  i18n.defined({
+  i18n.update({
     label: '中文简体',
     code: 'zh_CN',
     UI: {
+      NEW: '新建',
       SAVE: '存储',
     },
   });
 
-  i18n.defined({
+  i18n.update({
     label: '中文繁體',
     code: 'zh_HK',
     UI: {
@@ -31,25 +32,21 @@ describe('index.spec.ts', () => {
     },
   });
 
-  it('zh_HK eq i18n.localeData().code.', function () {
-    expect(i18n.locale()).eq(i18n.localeData().code);
+  const locale = i18n.localeData();
+
+  const SUBMIT_LOCALES = I18n.locales(locale.UI.SUBMIT);
+  const SUBMIT_DEFAULT = I18n.default(locale.UI.SUBMIT);
+  const SAVE_LOCALES = I18n.locales(locale.UI.SAVE);
+
+  it('should ', () => {
+    expect(SUBMIT_LOCALES.en_US).eq('Submit');
+    expect(SUBMIT_LOCALES.zh_CN).eq('Submit');
+    expect(SUBMIT_LOCALES.zh_HK).eq('Submit');
+    expect(SUBMIT_DEFAULT).eq(SUBMIT_LOCALES.en_US);
   });
 
-  it('当繁体中文包含UI.NEW时 使用当前定义的值：此时结果为`新建`', function () {
-    i18n.locale('zh_HK');
-    expect('新建').eq(i18n.localeData().UI.NEW);
-  });
-
-  it('当简体中文不包含UI.NEW时 使用默认语言定义的值：此时结果为`New`', function () {
+  it('should ', () => {
     i18n.locale('zh_CN');
-    expect('New').eq(i18n.localeData().UI.NEW);
-  });
-
-  it('当其他语言都不包含时，使用默认语言的值', function () {
-    i18n.locale('zh_CN');
-    expect('Submit').eq(i18n.localeData().UI.SUBMIT);
-
-    i18n.locale('zh_HK');
-    expect('Submit').eq(i18n.localeData().UI.SUBMIT);
+    expect(I18n.current(locale.UI.SAVE)).eq(SAVE_LOCALES.zh_CN);
   });
 });
